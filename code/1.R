@@ -8,7 +8,7 @@ package.check <- lapply(packages, function(x) {
 
 
 # Load data
-ddi <- read_ipums_ddi("nhis_00005.xml")hhh
+ddi <- read_ipums_ddi("nhis_00005.xml")
 data <- read_ipums_micro(ddi)
 
 # View first few rows of the dataset
@@ -70,6 +70,19 @@ weighted_model <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON
                          design = design)
 summary(weighted_model)
 
+# 计算整个模型的 F 统计量
+f_test <- regTermTest(weighted_model, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY)
+print(f_test)
+
+# R-squared
+y_hat <- predict(weighted_model, type = "response")
+y <- data_clean$K6
+w <- weights(design)
+sst <- sum(w * (y - weighted.mean(y, w))^2)
+sse <- sum(w * (y - y_hat)^2)
+R2_weighted <- 1 - (sse / sst)
+print(R2_weighted)
+
 # 异方差检验， 🔹 1. Breusch-Pagan 检验（BP 检验）， 运行 Breusch-Pagan 检验，
 #p 值 < 0.05：存在异方差问题。
 #p 值 > 0.05：未发现显著的异方差问题。
@@ -114,5 +127,20 @@ robust_model <- coeftest(lm_model_multi, vcov = vcovHC(lm_model_multi, type = "H
 print(robust_model)
 
 
-
+#robustness check1
+# 1️⃣ 仅包含核心变量（基准模型）
+model_1 <- svyglm(K6 ~ CIGSDAY, design = design)
+summary(model_1)
+# 2️⃣ 加入基本的人口统计变量
+model_2 <- svyglm(K6 ~ CIGSDAY + AGE + SEX, design = design)
+summary(model_2)
+# 3️⃣ 加入健康和家庭相关变量
+model_3 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD, design = design)
+summary(model_3)
+# 4️⃣ 加入经济变量
+model_4 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON, design = design)
+summary(model_4)
+# 5️⃣ 加入睡眠相关变量（完整模型）
+model_5 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY, design = design)
+summary(model_5)
 
