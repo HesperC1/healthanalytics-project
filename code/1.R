@@ -8,7 +8,7 @@ package.check <- lapply(packages, function(x) {
 
 
 # Load data
-ddi <- read_ipums_ddi("nhis_00005.xml")
+ddi <- read_ipums_ddi("nhis_00005.xml")hhh
 data <- read_ipums_micro(ddi)
 
 # View first few rows of the dataset
